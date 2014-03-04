@@ -36,9 +36,19 @@ public class AirPort {
 		m_airLines.add(newAL);
 	}
 	
-	//adds a Terminal Gate and associates an airline to it
+	//adds a Terminal Gate and associates an airline to it.  Assumes one airline per gate
 	public void addTerminals(String gate, String alCode){
 //		m_airportTerm.AddGate(gate, alCode);
+	}
+	
+	private void CheckFlightStatus()
+	{
+		//Becomes a Threaded function that checks all Flight Statuses every 5 Minutes
+	}
+	
+	private void CheckGateStatus()
+	{
+		//Becomes a Threaded function that checks Gate Status' every 2 minutes
 	}
 	
 	public static void main(String[] args){

@@ -1,6 +1,8 @@
 /*  The the FlightDBAccess class gives access to an SQL Server database that contains the Flight information
  * 2/22/14
  * The initial class just has connections to the database.  Container sets will be added to store the information the class.
+ * 3/1/14
+ * FlightMgr Added to add flights from database
  */
 import java.sql.*;
 
@@ -9,6 +11,9 @@ public class FlightDBAccess {
 	private Connection connect = null;
 	private Statement statement = null;
 	private ResultSet resultSet = null;
+	private FlightManager m_fltMgr = null;
+	
+	public void SetFlightMgr(FlightManager fm){m_fltMgr = fm;}
 	
 	public void readDataBase (String airineCd){
 		try{
@@ -23,7 +28,28 @@ public class FlightDBAccess {
 			
 			resultSet = statement.executeQuery("SELECT * FROM Flights");
 			
-			// store resultSet in container classes for Airline class to build flights
+			Flight newFlight = null;
+			
+			if(m_fltMgr != null)
+			{
+				while(resultSet.next()){
+				
+					newFlight = new Flight();
+					
+					//set Flight fields;
+
+					newFlight.flightNO = resultSet.getString("FLT_NO");  
+					newFlight.destination = resultSet.getString("Destination");
+					newFlight.origin = resultSet.getString("Origin");
+					
+					if(newFlight != null)
+					{
+						m_fltMgr.addFlight(newFlight, newFlight.flightNO);
+					}
+				
+				}
+			}
+			
 			
 		}catch(ClassNotFoundException e){
 			e.printStackTrace();

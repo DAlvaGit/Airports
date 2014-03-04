@@ -2,25 +2,28 @@
 The object also needs to know what it's airline code is
 2/22/14
 The initial iteration assumes every flight has a unique flight number.  The Flight starts without the time members. Time members with member functions to be added
+3/1/14
+The Flights Hashtable is replaced by the FlightManager to manage the Flights
 */
 
 import java.util.*; 
+
 
 public class Airline {
 	private String m_airLineCode;
 	
 	//Flight container class can be switched
-	private Hashtable<String, Flight> m_Flights;  // assumes every flight has unique flight number
+	private FlightManager m_flightMgr;
 	private Vector<String> m_localGates;
-//	private FlightDBAccess m_dbFlights;
+	private FlightDBAccess m_dbFlights;
 
 	public Airline(String ac){
 		m_airLineCode = ac;
-		m_Flights = new Hashtable<String, Flight>();
 		m_localGates = new Vector();
+		m_flightMgr = new FlightManager();		
 	} 
 	public Airline(){
-		m_Flights = new Hashtable<String, Flight>();
+		m_flightMgr = new FlightManager();
 		m_localGates = new Vector();
 	}
 	
@@ -51,22 +54,39 @@ public class Airline {
 	
 	public void CreateFlights(){
 		// read database to create flights
+		
+		//set flight airline code in flightmanager
 //		m_dbFlights = new FlightDBAccess();
+//		m_dbFlights.SetFlightMgr(m_flightMgr);
 //		m_dbFlights.readDataBase(m_airLineCode);
 	}
+	
+	// This function will set the initial gates for departing flights
+	public void SetInitialGates(){
 		
+	}
+
+	public Flight getFlight(String fltNo)
+	{
+		Flight srcFlt = m_flightMgr.getFlight(fltNo);
+		return srcFlt;
+	}
+	
+	// for testing purposes, add temp flights to FLightManager	
 	public void addFlight(String flNO, String dest, String orig)
 	{
-		Flight temp = new Flight();
-		temp.flightNO = flNO;
-		temp.destination = dest;
-		temp.origin = orig;
+		Flight newFL = new Flight();
+		newFL.flightNO = flNO;
+		newFL.destination = dest;
+		newFL.origin = orig;
+		newFL.status = FlightStatus.SCHEDULED;
 		
-		m_Flights.put(flNO, temp);
+		m_flightMgr.addFlight(newFL, flNO);
 	}
 	
 	public void SetDepartureGate(String flNO, String depGate){
-		Flight temp = m_Flights.get(flNO);
+		
+		Flight temp = m_flightMgr.getFlight(flNO);
 		
 		if(temp != null)
 		{
@@ -74,8 +94,9 @@ public class Airline {
 		}		
 	}
 	
-	public void SetFlightArrivalGate(String flNO, String arrGate){
-		Flight temp = m_Flights.get(flNO);
+	public void SetArrivalGate(String flNO, String arrGate){
+
+		Flight temp = m_flightMgr.getFlight(flNO);
 		
 		if(temp != null)
 		{
@@ -86,36 +107,21 @@ public class Airline {
 	
 	// This function gets a list of flight numbers that matches the Origin and Destination
 	public void GetDestinationFlights(String orig, String dest, Vector flNOs){
-		Enumeration<String> enumKey = m_Flights.keys();
-		Flight currFlight;
-		while(enumKey.hasMoreElements()){
-			String nextKey = enumKey.nextElement();
-			currFlight = m_Flights.get(nextKey);
-			if(currFlight != null && (currFlight.origin == orig && currFlight.destination == dest)){
-				flNOs.add( m_airLineCode + currFlight.flightNO);
-			}
-		}
+
+		m_flightMgr.getFlights(orig, dest, flNOs);
 	}
 	
 	// This function gets all the flight numbers arriving into one airport, dest = airport code
 	public void GetAllFlightsToDestination(String dest, Vector flNOs){
-		Enumeration<String> enumKey = m_Flights.keys();
-		Flight currFlight;
-		while(enumKey.hasMoreElements()){
-			String nextKey = enumKey.nextElement();
-			currFlight = m_Flights.get(nextKey);
-			if(currFlight != null && currFlight.destination == dest)
-			{
-				flNOs.add( m_airLineCode + currFlight.flightNO);
-			}
-		}
-		
+
+		m_flightMgr.getArrivingFlights(dest, flNOs);		
 	}
 	
 	//This function returns the Origin and Destination of a given flight number
+	//Managed by fight manager
 	public boolean GetFlightLocations(String flNO, String orig, String dest)
 	{
-		Flight temp = m_Flights.get(flNO);
+		Flight temp = m_flightMgr.getFlight(flNO);
 		
 		if(temp != null)
 		{
@@ -125,28 +131,15 @@ public class Airline {
 		}
 		return false;
 	}
-
 	
-	
-
-	public class Flight{
-		public String flightNO;
-		public String destination;
-		public String origin;
-		//arrivalTime
-		//departTime
-		//delayedArrivalTime
-		//delayedDepartureTime
-		public String departGate;
-		public String arrivalGate;
-//		public boolean connectingFlt;
-//		public int baggageClaim;
-		
-//      Potential other Class AirCraft
-//		public string plane;
-//		public int firstClassPass;
-//		public int ecoCabinPass;
-//		public int totalPassengers;
+	//This functions returns all of the flights arriving in the range of startTime and finalTime  12:00 - 13:00
+	public void GetFlights(String startHour, String finalHour, Vector flNOs)
+	{
 		
 	}
+
+	
+	
+
+
 }
