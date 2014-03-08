@@ -1,12 +1,15 @@
-/*The data Structure that is going to be managed*/
+/*The data Structure that is going to be managed
+ * 3/8/14  Arrival and Departure times added as Strings
+ * */
+
 public class Flight {
 
 		public String flightNO;
 		public String destination;
 		public String origin;
 		public FlightStatus status;
-		//arrivalTime
-		//departTime
+		public String arrivalTime;
+		public String departureTime;
 		//delayedArrivalTime
 		//delayedDepartureTime
 		public String departGate;

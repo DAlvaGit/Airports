@@ -6,6 +6,7 @@ The initial iteration assumes every flight has a unique flight number.  The Flig
 The Flights Hashtable is replaced by the FlightManager to manage the Flights
 */
 
+import java.text.SimpleDateFormat;
 import java.util.*; 
 
 
@@ -52,9 +53,10 @@ public class Airline {
 	}
 
 	
-	public void CreateFlights(){
+	public void CreateFlights(Calendar today){
 		// read database to create flights
 		
+		//need to pass in Calendar to get a today's flights
 		//set flight airline code in flightmanager
 //		m_dbFlights = new FlightDBAccess();
 //		m_dbFlights.SetFlightMgr(m_flightMgr);
@@ -73,15 +75,51 @@ public class Airline {
 	}
 	
 	// for testing purposes, add temp flights to FLightManager	
-	public void addFlight(String flNO, String dest, String orig)
+	public void addFlight(String flNO, String dest, String orig, int hour, int min)
 	{
 		Flight newFL = new Flight();
 		newFL.flightNO = flNO;
 		newFL.destination = dest;
 		newFL.origin = orig;
 		newFL.status = FlightStatus.SCHEDULED;
+		newFL.departureTime = hour  + ":" + min;
 		
 		m_flightMgr.addFlight(newFL, flNO);
+	}
+	
+	public String GetDepartureTime(String flno)
+	{
+		Flight srcFl = m_flightMgr.getFlight(flno);
+		
+		return srcFl.departureTime;
+	}
+
+	public String GetArrivalTime(String flno)
+	{
+		Flight srcFl = m_flightMgr.getFlight(flno);
+		
+		return srcFl.arrivalTime;
+	}
+
+	
+	public void SetDepartureTime(String flNO, String arr){
+		
+		Flight temp = m_flightMgr.getFlight(flNO);
+		
+		if(temp != null)
+		{
+			temp.departureTime = arr;
+		}		
+	}
+	
+	public void SetArrivalTime(String flNO, String arr){
+		
+		Flight temp = m_flightMgr.getFlight(flNO);
+		
+		if(temp != null)
+		{
+			temp.arrivalTime = arr;
+		}		
 	}
 	
 	public void SetDepartureGate(String flNO, String depGate){
@@ -106,13 +144,13 @@ public class Airline {
 		
 	
 	// This function gets a list of flight numbers that matches the Origin and Destination
-	public void GetDestinationFlights(String orig, String dest, Vector flNOs){
+	public void GetDestinationFlights(String orig, String dest, Vector<String> flNOs){
 
 		m_flightMgr.getFlights(orig, dest, flNOs);
 	}
 	
 	// This function gets all the flight numbers arriving into one airport, dest = airport code
-	public void GetAllFlightsToDestination(String dest, Vector flNOs){
+	public void GetAllFlightsToDestination(String dest, Vector<String> flNOs){
 
 		m_flightMgr.getArrivingFlights(dest, flNOs);		
 	}
@@ -131,15 +169,14 @@ public class Airline {
 		}
 		return false;
 	}
+
 	
 	//This functions returns all of the flights arriving in the range of startTime and finalTime  12:00 - 13:00
-	public void GetFlights(String startHour, String finalHour, Vector flNOs)
-	{
-		
+	//departing tests on Flight departure time (true) else test on arrival time.
+	//airCode gives the airport code of flights  
+	public void GetFlights(String startTime, String finalTime, Vector<String> flNOs, boolean departing, String airCode)
+	{		
+		m_flightMgr.getFlights(startTime, finalTime, flNOs, departing, airCode);
 	}
-
 	
-	
-
-
 }

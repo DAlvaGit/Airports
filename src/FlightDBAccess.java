@@ -5,6 +5,7 @@
  * FlightMgr Added to add flights from database
  */
 import java.sql.*;
+import java.util.Calendar;
 
 public class FlightDBAccess {
 
@@ -16,6 +17,9 @@ public class FlightDBAccess {
 	public void SetFlightMgr(FlightManager fm){m_fltMgr = fm;}
 	
 	public void readDataBase (String airineCd){
+		Calendar today;
+		today = Calendar.getInstance();
+		
 		try{
 		
 			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -37,10 +41,27 @@ public class FlightDBAccess {
 					newFlight = new Flight();
 					
 					//set Flight fields;
+					// need to test on Date
 
 					newFlight.flightNO = resultSet.getString("FLT_NO");  
-					newFlight.destination = resultSet.getString("Destination");
-					newFlight.origin = resultSet.getString("Origin");
+					newFlight.destination = resultSet.getString("DEST");
+					newFlight.origin = resultSet.getString("ORIG");
+					
+					Calendar cal = Calendar.getInstance();					
+					java.sql.Date tmpDate= resultSet.getDate("DEP_DATE");
+					cal.setTime(tmpDate);
+					
+					int hour = cal.get(Calendar.HOUR);
+					int minute = cal.get(Calendar.MINUTE);
+					newFlight.departureTime = hour + ":" + minute;
+					
+					tmpDate = resultSet.getDate("ARR_DATE");
+					cal.setTime(tmpDate);
+					
+					hour = cal.get(Calendar.HOUR);
+					minute = cal.get(Calendar.MINUTE);
+					newFlight.arrivalTime = hour + ":" + minute;
+					
 					
 					if(newFlight != null)
 					{
