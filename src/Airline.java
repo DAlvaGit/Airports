@@ -2,13 +2,17 @@
 The object also needs to know what it's airline code is
 2/22/14
 The initial iteration assumes every flight has a unique flight number.  The Flight starts without the time members. Time members with member functions to be added
+
 3/1/14
 The Flights Hashtable is replaced by the FlightManager to manage the Flights
+
+3/12/14
+Added A Check Flight Status method that checks the flight status of flight arriving and departing from an Airport and writes results to corresponding files
 */
 
 import java.text.SimpleDateFormat;
 import java.util.*; 
-
+import java.io.*;
 
 public class Airline {
 	private String m_airLineCode;
@@ -82,7 +86,17 @@ public class Airline {
 		newFL.destination = dest;
 		newFL.origin = orig;
 		newFL.status = FlightStatus.SCHEDULED;
-		newFL.departureTime = hour  + ":" + min;
+		
+		if(min < 10)
+		{
+			newFL.departureTime = hour  + ":0" + min;			
+		}
+		else
+		{
+			newFL.departureTime = hour  + ":" + min;
+		}
+		
+		newFL.arrivalTime = (hour + 3) + ":" + min;
 		
 		m_flightMgr.addFlight(newFL, flNO);
 	}
@@ -143,13 +157,13 @@ public class Airline {
 	}	
 		
 	
-	// This function gets a list of flight numbers that matches the Origin and Destination
+	// This method gets a list of flight numbers that matches the Origin and Destination
 	public void GetDestinationFlights(String orig, String dest, Vector<String> flNOs){
 
 		m_flightMgr.getFlights(orig, dest, flNOs);
 	}
 	
-	// This function gets all the flight numbers arriving into one airport, dest = airport code
+	// This method gets all the flight numbers arriving into one airport, dest = airport code
 	public void GetAllFlightsToDestination(String dest, Vector<String> flNOs){
 
 		m_flightMgr.getArrivingFlights(dest, flNOs);		
@@ -171,7 +185,7 @@ public class Airline {
 	}
 
 	
-	//This functions returns all of the flights arriving in the range of startTime and finalTime  12:00 - 13:00
+	//This method returns all of the flights arriving in the range of startTime and finalTime  12:00 - 13:00
 	//departing tests on Flight departure time (true) else test on arrival time.
 	//airCode gives the airport code of flights  
 	public void GetFlights(String startTime, String finalTime, Vector<String> flNOs, boolean departing, String airCode)
@@ -179,4 +193,55 @@ public class Airline {
 		m_flightMgr.getFlights(startTime, finalTime, flNOs, departing, airCode);
 	}
 	
+	// This method takes in a starting hour and checks both the status of flights scheduled to arrive and depart at that time
+	// The check must also include flights to and from a specific airport
+	// The result is written out to a file to a Departure.txt and Arrival.txt files
+	public void CheckFlightStatus(String startingHour, String localAirport)
+	{		
+		Vector<Flight> flights = new Vector<Flight>();		
+		
+		try{
+			m_flightMgr.GetSortedFlights(flights, startingHour, true);	
+			
+			File fdStatus = new File("Departures.txt");
+			BufferedWriter bw = new BufferedWriter(new FileWriter(fdStatus));
+
+			String line = null;
+			for(Flight fl: flights)
+			{
+				if(localAirport == fl.origin)
+				{
+					line = m_airLineCode + " Flight " + fl.flightNO + " to " + fl.destination + " Departing at " + fl.departureTime + " is "+ fl.status.toString();
+					bw.write(line);
+					bw.newLine();
+		
+				}
+			}
+			bw.flush();
+			bw.close();
+
+			flights.clear();
+			File faStatus = new File("Arrivals.txt");
+			bw = new BufferedWriter(new FileWriter(faStatus));
+			
+			m_flightMgr.GetSortedFlights(flights, startingHour, false);			
+			for(Flight fl: flights)
+			{
+				if(localAirport == fl.destination)
+				{
+					line = m_airLineCode + " Flight " + fl.flightNO + " from " + fl.origin + " Arrives at " + fl.arrivalTime + " is "+ fl.status.toString();
+					bw.write(line);
+					bw.newLine();
+				}
+			}
+			bw.flush();
+			bw.close();
+			
+		}
+		catch(IOException e)
+		{
+			
+		}
+	}
+
 }
