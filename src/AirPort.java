@@ -27,7 +27,7 @@ public class AirPort {
 	private volatile Thread m_flightStatusTrd;
 	private String m_airportCode;
 	private Vector<Airline> m_airLines;
-	private Terminal m_airportTerm;    // assumes one terminal at airport
+	private Terminal m_airportTerm = null;    // assumes one terminal at airport
 	
 
 	public AirPort(int numAL){
@@ -38,6 +38,11 @@ public class AirPort {
 	public void Airport(){
 		m_airLines = new Vector<Airline>();
 		m_airportTerm = new Terminal();
+	}
+	
+	public Terminal GetTerminal()
+	{
+		return m_airportTerm;
 	}
 	
 	public void setAiportCode(String ac){
@@ -107,10 +112,12 @@ public class AirPort {
 		Logan.setAiportCode("BOS");
 		
 		Logan.m_airportTerm.addTerminalCode("E");
-		Logan.m_airportTerm.addNumGates(7);
+		Logan.m_airportTerm.addNumGates(8);
 
 		Logan.m_airLines.add(new Airline("DL"));
 		Logan.m_airLines.add(new Airline("AF"));
+		Logan.m_airLines.add(new Airline("LX"));  //Swiss Air
+		Logan.m_airLines.add(new Airline("LH"));  //Lufthansa
 
 		Calendar currCal = Calendar.getInstance();		
 		//initialize Airlines
@@ -127,10 +134,20 @@ public class AirPort {
 			}
 			else if(al.GetAirLineCode() == "AF")
 			{
-				al.AddGate(Logan.m_airportTerm.addGate("1", "DL"));
-				al.AddGate(Logan.m_airportTerm.addGate("2", "DL"));
-				
+				al.AddGate(Logan.m_airportTerm.addGate("1", "AF"));
+				al.AddGate(Logan.m_airportTerm.addGate("2", "AF"));
 			}
+			else if(al.GetAirLineCode() == "LH")
+			{
+				al.AddGate(Logan.m_airportTerm.addGate("7", "LH"));
+				al.AddGate(Logan.m_airportTerm.addGate("8", "LH"));				
+			}
+			else if(al.GetAirLineCode() == "LX")
+			{
+				al.AddGate(Logan.m_airportTerm.addGate("5", "LX"));
+				al.AddGate(Logan.m_airportTerm.addGate("6", "LX"));
+			}
+			
 			al.PrintGates();
 							
 			// create airline flights
@@ -138,7 +155,8 @@ public class AirPort {
 		}
 		
 
-		Logan.m_thePanel = new AirportPanel();		
+		Logan.m_thePanel = new AirportPanel();	
+		Logan.m_thePanel.SetTerminals(Logan.GetTerminal());
 	    SwingUtilities.invokeLater( new Runnable (){
 	    	public void run()
 	    	{
