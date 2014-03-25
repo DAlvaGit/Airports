@@ -5,6 +5,7 @@
  * (3)Provide a control to stop the Flight Status loop 
  * Other functionality added later.
  * 3/22/2014 Displays a Table with Airlines and their associated Gates
+ * 3/25/2014 Added a Flight status Thread to be interrupted
  */
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -24,7 +25,7 @@ public class AirportPanel {
 	private JTextField m_statusFld;
 	
 	private Thread m_FLSThread = null;
-	private boolean m_bFLS;
+
 	private Terminal m_terminals;
 	
 	public void SetTerminals(Terminal term)
@@ -32,14 +33,6 @@ public class AirportPanel {
 		m_terminals = term;
 	}
 	
-	public void SetFlightStatus(boolean fls)
-	{
-		m_bFLS = fls;
-	}
-	public boolean GetFlightStatusFlag()
-	{
-		return m_bFLS;
-	}
 
 	public void SetFlightStatusThread(Thread newThread)
 	{
@@ -123,8 +116,7 @@ public class AirportPanel {
 	    top.getContentPane().add(panel);
 	    top.pack();
 	    top.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-	    m_bFLS = true;	    
+    
 	    top.setVisible(true);	  
 
 	}
@@ -138,9 +130,9 @@ public class AirportPanel {
 			{
 				Date statusDate = new Date();
 				System.out.println("Status Button Selected " + statusDate.toString());
-				m_bFLS = false;
 				m_statusFld.setForeground(Color.red);
 				m_statusFld.setText(statusDate.toString());
+				m_FLSThread.interrupt();
 			}
 		}
 	}

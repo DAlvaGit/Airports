@@ -24,7 +24,8 @@ public class AirPort {
 
 	private AirportPanel m_thePanel = null;
 	
-	private volatile Thread m_flightStatusTrd;
+	private StatusTask m_flightStatusTrd;
+	private StatusTask m_terminalStsTrd;
 	private String m_airportCode;
 	private Vector<Airline> m_airLines;
 	private Terminal m_airportTerm = null;    // assumes one terminal at airport
@@ -39,6 +40,9 @@ public class AirPort {
 		m_airLines = new Vector<Airline>();
 		m_airportTerm = new Terminal();
 	}
+
+	static enum Task {FLIGHT, TERMINAL, GATE}
+	
 	
 	public Terminal GetTerminal()
 	{
@@ -62,43 +66,54 @@ public class AirPort {
 //		m_airportTerm.AddGate(gate, alCode);
 	}
 
-	//Becomes a Threaded function that checks all Flight Statuses every 2 Minutes
-	//Calls Airline to check the status of every Flight during a specific hour
-	//Tells the airline to print to a status file	
+
+	/*
+	 * Depending on the Status type an individual thread calls this method to determine which status to check
+	*/
+	public void CheckStatus(Task statusTp)
+	{
+		Calendar currCal = Calendar.getInstance();
+		String time = new SimpleDateFormat("HH:mm").format(currCal.getTime());
+
+		switch(statusTp){
+		case FLIGHT:
+		{
+
+			Enumeration<Airline> emration = m_airLines.elements();
+			while(emration.hasMoreElements()){
+				Airline al = (Airline) emration.nextElement();
+				al.CheckFlightStatus(time, m_airportCode);
+			}
+			
+			System.out.println("Updating Flight Status at " + currCal.getTime().toString());	
+			
+			m_thePanel.SetFlightStatusText(currCal.getTime().toString());
+			break;
+		}
+		case TERMINAL:
+		{
+			System.out.println("Updating Terminal Status at " + currCal.getTime().toString());	
+			break;
+		}
+	}
+	}
+	
+	//Terminal Status Thread initiated to check status every 4 minutes
+	public void CheckTerminalStatus()
+	{
+		System.out.println("Terminal Status Thread Started");
+		m_terminalStsTrd = new StatusTask(240000,this, Task.TERMINAL);
+		m_terminalStsTrd.start();		
+	}
+	
+	//Flight Status Thread initiated to check status every 2 minutes
 	private void CheckFlightStatus() 
 	{	
 		System.out.println("Flight Status Thread Started");
-		boolean continueStatus = true;
-		
-		while (continueStatus)
-		{
-			try{
-				System.out.println("going to sleep");
-				Thread.sleep(120000);
-			}catch (InterruptedException e)
-			{
-				System.out.println("The thread was indeed interrupted");
-			}
 
-			if(!m_thePanel.GetFlightStatusFlag())
-			{
-				continueStatus = false;
-			}
-			else
-			{
-				Calendar currCal = Calendar.getInstance();
-				String time = new SimpleDateFormat("HH:mm").format(currCal.getTime());
-				System.out.println("Updating Status at " + currCal.getTime().toString());
-				
-				Enumeration<Airline> emration = m_airLines.elements();
-				while(emration.hasMoreElements()){
-					Airline al = (Airline) emration.nextElement();
-					al.CheckFlightStatus(time, m_airportCode);
-				}
-				
-				m_thePanel.SetFlightStatusText(currCal.getTime().toString());
-			}
-		}			
+		m_flightStatusTrd = new StatusTask(120000,this, Task.FLIGHT);
+		m_flightStatusTrd.start();
+		m_thePanel.SetFlightStatusThread(m_flightStatusTrd);		
 	}
 	
 	private void CheckGateStatus()
@@ -157,6 +172,7 @@ public class AirPort {
 
 		Logan.m_thePanel = new AirportPanel();	
 		Logan.m_thePanel.SetTerminals(Logan.GetTerminal());
+
 	    SwingUtilities.invokeLater( new Runnable (){
 	    	public void run()
 	    	{
@@ -165,10 +181,10 @@ public class AirPort {
 	    });
 	    // Create Thread to Check Flight Status periodically
 	    Logan.CheckFlightStatus();
+	    Logan.CheckTerminalStatus();
 	    
 	    System.out.println((new Date()).toString());
 		System.out.println("Ultimately Done!!!");
 	}
 	
-
 }
