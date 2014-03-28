@@ -27,7 +27,7 @@ public class FlightManager {
 	//This method will add a flight to the manager and will keep track of flights departing and arriving at a certain hour
 	public void addFlight(Flight flt, String fltNo){
 
-		flt.status = FlightStatus.SCHEDULED;
+//		flt.status = FlightStatus.SCHEDULED;
 		m_flights.put(fltNo, flt);
 	
 		String theHour  = flt.arrivalTime.substring(0, 2);
@@ -62,11 +62,12 @@ public class FlightManager {
 	
 	//This method fills a Flights list with flights flights arriving in the specified time.
 	//The departing flag signifies if the user wants departing or arrival flignts
-	public void GetSortedFlights(Vector<Flight> flights,String time, boolean departing)
+	public Vector<Flight> getSortedFlights(String time, boolean departing)
 	{
 		List<String> avlFlights = null;
 		String theHour = time.substring(0, 2);
 
+		Vector<Flight> flights = null;
 		if(departing)
 		{
 			avlFlights = m_sortDepFlights.get(theHour);
@@ -78,12 +79,15 @@ public class FlightManager {
 		
 		if(avlFlights != null)
 		{
+			flights = new Vector<Flight>();
+			
 			for(String fl: avlFlights)
 			{
-				flights.add(m_flights.get(fl));
+					flights.addElement(m_flights.get(fl));
 			}
 		}
 		
+		return flights;
 	}
 	
 	public Flight getFlight(String flNo)

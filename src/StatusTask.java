@@ -26,7 +26,7 @@ public class StatusTask extends Thread {
 				System.out.println("going to sleep" + m_task.toString());
 				Thread.sleep(m_delay);
 					
-				m_airport.CheckStatus(m_task);	
+				m_airport.checkStatus(m_task);	
 			}
 		}catch (InterruptedException e)
 		{

@@ -5,7 +5,10 @@
  * Assigns Terminal Gates and those gates to Airlines.
  * Calls for Airlines to initialize their flight information.
  * 3/21/2014
- * The CheckFlight Status function was populated and a GUI Panel was added to display minimal information 
+ * The CheckFlight Status function was populated and a GUI Panel was added to display minimal information
+ * 3/28/2014
+ * CheckStatus method reads from Airline status rather than writes to a file
+ * FlightStatusPanel added to Main 
  * */
 
 import java.io.BufferedWriter;
@@ -23,6 +26,7 @@ public class AirPort {
 
 
 	private AirportPanel m_thePanel = null;
+	private FlightStatusPanel m_statusPanel = null;
 	
 	private StatusTask m_flightStatusTrd;
 	private StatusTask m_terminalStsTrd;
@@ -36,7 +40,7 @@ public class AirPort {
 		m_airportTerm = new Terminal();		
 	}
 	
-	public void Airport(){
+	public AirPort(){
 		m_airLines = new Vector<Airline>();
 		m_airportTerm = new Terminal();
 	}
@@ -70,23 +74,61 @@ public class AirPort {
 	/*
 	 * Depending on the Status type an individual thread calls this method to determine which status to check
 	*/
-	public void CheckStatus(Task statusTp)
+	public void checkStatus(Task statusTp)
 	{
 		Calendar currCal = Calendar.getInstance();
 		String time = new SimpleDateFormat("HH:mm").format(currCal.getTime());
 
+		
 		switch(statusTp){
 		case FLIGHT:
 		{
 
 			Enumeration<Airline> emration = m_airLines.elements();
+			Vector<Flight> flights = new Vector<Flight>();
+
+			m_statusPanel.clearTables();
+			
+			
+			while(emration.hasMoreElements()){
+				Airline currAirline = (Airline) emration.nextElement();
+				
+				flights = currAirline.getSortedFlights(time, 2, true, m_airportCode);
+				
+				if(flights != null)
+				{
+					for(Flight fl: flights)
+					{
+						String [] status = { currAirline.getAirLineCode(),fl.flightNO, fl.destination, fl.departureTime,fl.status.toString(),""};// gate will be assigned later
+						m_statusPanel.addDepartureStatus(status);
+					}
+					flights.clear();
+				}
+				
+				flights = currAirline.getSortedFlights(time, 2, false, m_airportCode);
+				
+				if(flights != null)
+				{
+					for(Flight fl: flights)
+					{
+						String [] status = { currAirline.getAirLineCode(),fl.flightNO, fl.origin, fl.arrivalTime,fl.status.toString(),""}; // gate will be assigned later
+						m_statusPanel.addArrivalStatus(status);
+					}
+					flights.clear();	
+				}
+			}		
+			m_statusPanel.refreshTables();
+			
+/*
+			Enumeration<Airline> emration = m_airLines.elements();
 			while(emration.hasMoreElements()){
 				Airline al = (Airline) emration.nextElement();
 				al.CheckFlightStatus(time, m_airportCode);
+				
 			}
-			
-			System.out.println("Updating Flight Status at " + currCal.getTime().toString());	
-			
+*/			
+			m_statusPanel.SetFlightStatusText(currCal.getTime().toString());
+			System.out.println("Updating Flight Status at " + currCal.getTime().toString());
 			m_thePanel.SetFlightStatusText(currCal.getTime().toString());
 			break;
 		}
@@ -98,32 +140,32 @@ public class AirPort {
 	}
 	}
 	
-	//Terminal Status Thread initiated to check status every 4 minutes
-	public void CheckTerminalStatus()
+	//Terminal Status Thread initiated to check terminal status every 4 minutes
+	public void checkTerminalStatus()
 	{
 		System.out.println("Terminal Status Thread Started");
 		m_terminalStsTrd = new StatusTask(240000,this, Task.TERMINAL);
 		m_terminalStsTrd.start();		
 	}
 	
-	//Flight Status Thread initiated to check status every 2 minutes
-	private void CheckFlightStatus() 
+	//Flight Status Thread initiated to check flight status every 2 minutes
+	private void checkFlightStatus() 
 	{	
 		System.out.println("Flight Status Thread Started");
 
-		m_flightStatusTrd = new StatusTask(120000,this, Task.FLIGHT);
+		m_flightStatusTrd = new StatusTask(10000,this, Task.FLIGHT);
 		m_flightStatusTrd.start();
 		m_thePanel.SetFlightStatusThread(m_flightStatusTrd);		
 	}
 	
-	private void CheckGateStatus()
+	private void checkGateStatus()
 	{
 		//Becomes a Threaded function that checks Gate Status' every 2 minutes
 	}
 	
 	
 	public static void main(String[] args){
-		final AirPort Logan = new AirPort(2);  // at most two airlines at airport
+		final AirPort Logan = new AirPort();  // at most two airlines at airport
 		Logan.setAiportCode("BOS");
 		
 		Logan.m_airportTerm.addTerminalCode("E");
@@ -141,32 +183,35 @@ public class AirPort {
 			Airline al = (Airline) emration.nextElement(); 
 			
 			//set Terminal Gates to Each airline
-			if(al.GetAirLineCode() == "DL")
+			String airlineCode = al.getAirLineCode(); 
+			if( airlineCode.equals("DL"))
 			{
-				al.AddGate(Logan.m_airportTerm.addGate("3", "DL"));
-				al.AddGate(Logan.m_airportTerm.addGate("4", "DL"));
+				al.addGate(Logan.m_airportTerm.addGate("3", "DL"));
+				al.addGate(Logan.m_airportTerm.addGate("4", "DL"));			
 				
 			}
-			else if(al.GetAirLineCode() == "AF")
+			else if(airlineCode.equals("AF") )
 			{
-				al.AddGate(Logan.m_airportTerm.addGate("1", "AF"));
-				al.AddGate(Logan.m_airportTerm.addGate("2", "AF"));
+				al.addGate(Logan.m_airportTerm.addGate("1", "AF"));
+				al.addGate(Logan.m_airportTerm.addGate("2", "AF"));
+					
 			}
-			else if(al.GetAirLineCode() == "LH")
+			else if(airlineCode.equals("LH"))
 			{
-				al.AddGate(Logan.m_airportTerm.addGate("7", "LH"));
-				al.AddGate(Logan.m_airportTerm.addGate("8", "LH"));				
+				al.addGate(Logan.m_airportTerm.addGate("7", "LH"));
+				al.addGate(Logan.m_airportTerm.addGate("8", "LH"));				
+				
 			}
-			else if(al.GetAirLineCode() == "LX")
+			else if(airlineCode.equals("LX"))
 			{
-				al.AddGate(Logan.m_airportTerm.addGate("5", "LX"));
-				al.AddGate(Logan.m_airportTerm.addGate("6", "LX"));
+				al.addGate(Logan.m_airportTerm.addGate("5", "LX"));
+				al.addGate(Logan.m_airportTerm.addGate("6", "LX"));
 			}
 			
-			al.PrintGates();
+			al.printGates();
 							
 			// create airline flights
-			al.CreateFlights(currCal);
+			al.createFlights(currCal);
 		}
 		
 
@@ -179,9 +224,17 @@ public class AirPort {
 	    		Logan.m_thePanel.InitandDisplay();
 	    	}
 	    });
+	    
+
+	    SwingUtilities.invokeLater( new Runnable (){
+	    	public void run()
+	    	{
+	    		Logan.m_statusPanel = new FlightStatusPanel();
+	    	}
+	    });	    
 	    // Create Thread to Check Flight Status periodically
-	    Logan.CheckFlightStatus();
-	    Logan.CheckTerminalStatus();
+	    Logan.checkFlightStatus();
+	    Logan.checkTerminalStatus();
 	    
 	    System.out.println((new Date()).toString());
 		System.out.println("Ultimately Done!!!");
